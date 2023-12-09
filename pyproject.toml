@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "AoC Leaderboard"
+version = "0.0.0"
+description = "Because we need perspectives :)"
+authors = ["Sage Choi <sage.choi@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.9.7 || >3.9.7,<3.12"
+python-dotenv = "^1.0.0"
+pydantic = "^2.5.2"
+pandas = "^2.1.4"
+numpy = "^1.26.2"
+matplotlib = "^3.8.2"
+streamlit = "^1.29.0"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.26.0"
+pytest = "^6.0.0"
+pytest-mock = "*"
+python-semantic-release = "^8.3.0"
+flake8 = "^6.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
