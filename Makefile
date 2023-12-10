@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 env:
-	poetry env use python
+	poetry env use python3
 	poetry install
 
 clean:
