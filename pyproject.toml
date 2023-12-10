@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "AoC Leaderboard"
+name = "aoc-leaderboard"
 version = "0.0.0"
 description = "Because we need perspectives :)"
 authors = ["Sage Choi <sage.choi@gmail.com>"]
