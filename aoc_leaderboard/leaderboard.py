@@ -1,9 +1,6 @@
-import datetime
 import json
 from typing import Dict
-
-import pytz
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class StarChallenge(BaseModel):
@@ -66,18 +63,3 @@ def parse_json(json_str):
     data = json.loads(json_str)
     root = Leaderboard(**data)
     return root
-
-
-# Convert UNIX timestamp to datetime and adjust for EST timezone
-def convert_to_est(unix_timestamp):
-    utc_time = datetime.datetime.utcfromtimestamp(unix_timestamp)
-    est = pytz.timezone("US/Eastern")
-    return utc_time.replace(tzinfo=pytz.utc).astimezone(est)
-
-
-# Calculate the midnight timestamp (in EST) for a given day's timestamp
-def get_midnight_est(day_timestamp):
-    est_time = convert_to_est(day_timestamp)
-    return datetime.datetime(
-        est_time.year, est_time.month, est_time.day, tzinfo=est_time.tzinfo
-    )

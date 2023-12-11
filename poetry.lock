@@ -1122,6 +1122,21 @@ files = [
 ]
 
 [[package]]
+name = "mpld3"
+version = "0.5.9"
+description = "D3 Viewer for Matplotlib"
+optional = false
+python-versions = "*"
+files = [
+    {file = "mpld3-0.5.9-py3-none-any.whl", hash = "sha256:cecdd988b24f8d7c7f362b8f72bb91df1a24b1993dd02a958223918a31c31052"},
+    {file = "mpld3-0.5.9.tar.gz", hash = "sha256:d8d228b2911132fd0154e2a49543b7f97247f9851cfe468c6b616f452c676158"},
+]
+
+[package.dependencies]
+jinja2 = "*"
+matplotlib = "*"
+
+[[package]]
 name = "nest-asyncio"
 version = "1.5.8"
 description = "Patch asyncio to allow nested event loops"
@@ -2495,4 +2510,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.9.7 || >3.9.7,<3.12"
-content-hash = "307a98906d00a760f3ee4b04175179c0178e291f92681748a238c556ed95d58e"
+content-hash = "36c80e282a668473264f66f94aca2119facbe930c6669a54e9dd1147a9a29c6f"
