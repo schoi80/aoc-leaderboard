@@ -2,11 +2,15 @@ from io import StringIO
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import plotly.subplots as sp
 import streamlit as st
 
 from aoc_leaderboard import charts
 from aoc_leaderboard.leaderboard import parse_json
 
+theme_plotly = None  # None or streamlit
 st.session_state["leaderboard_data"] = None
 
 
@@ -57,14 +61,14 @@ if st.session_state["leaderboard_data"] is not None:
 
     with analysis_tabs[0]:
         fig = charts.get_local_score(df)
-        st.pyplot(fig)
+        st.plotly_chart(fig, use_container_width=True, theme=theme_plotly)
 
     with analysis_tabs[1]:
         fig = charts.num_stars_won(df, dr)
-        st.pyplot(fig)
+        st.plotly_chart(fig, use_container_width=True, theme=theme_plotly)
 
         fig = charts.daily_stars_progression(df, dr)
-        st.pyplot(fig)
+        st.plotly_chart(fig, use_container_width=True, theme=theme_plotly)
 
     with analysis_tabs[2]:
         selected_users = st.multiselect(
@@ -72,10 +76,10 @@ if st.session_state["leaderboard_data"] is not None:
             [m.name for m in members_data],
             default=None,
         )
-        fig = charts.get_member_analysis_pt1(selected_users, df, dr)
-        st.pyplot(fig)
+        fig = charts.get_member_analysis_part1(selected_users, df, dr)
+        st.plotly_chart(fig, use_container_width=True, theme=theme_plotly)
 
         fig = charts.get_member_analysis_pt2(selected_users, df, dr)
-        st.pyplot(fig)
+        st.plotly_chart(fig, use_container_width=True, theme=theme_plotly)
 
 st.session_state["disabled"] = False

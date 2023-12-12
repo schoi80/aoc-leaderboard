@@ -2,8 +2,10 @@ import datetime
 from functools import reduce
 from typing import List
 
-import matplotlib.pyplot as plt
 import numpy as np
+import plotly.express as px
+import plotly.graph_objs as go
+import plotly.subplots as sp
 import pytz
 from matplotlib.pyplot import Figure
 from pandas import DataFrame
@@ -49,70 +51,80 @@ def get_days_range(data: List[Member]):
 
 
 def get_local_score(df: DataFrame) -> Figure:
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.barh(df["name"], df["stars"], color="yellow")
-    ax.set_xlabel("Number of stars won", color="white")
-    ax.set_ylabel("Name", color="white")
-    ax.set_title("Number of stars won per member", color="white")
-    ax.grid(axis="x", color="gray")
-    ax.tick_params(axis="both", colors="white")
+    fig = px.bar(
+        df,
+        x="name",
+        y="stars",
+        title="Number of stars won per member",
+        log_y=True,
+    )
+    fig.update_layout(
+        showlegend=False,
+        yaxis_title="Number of Stars",
+        xaxis_title="Name",
+        xaxis={"categoryorder": "total ascending"},
+        hovermode="x unified",
+    )
+    fig.update_traces(hovertemplate="%{y:,.0f}<extra></extra>")
     return fig
 
 
-def num_stars_won(df: DataFrame, dr: range) -> Figure:
-    # Columns related to star 1 and star 2 timestamps for each day
+def num_stars_won(df: DataFrame, dr: range):
     star_1_columns = [f"day_{i}_1_ts" for i in dr]
     star_2_columns = [f"day_{i}_2_ts" for i in dr]
 
-    # Calculate the counts for star 1 and star 2 for each day
     star_1_counts = [df[col].notna().sum() for col in star_1_columns]
     star_2_counts = [df[col].notna().sum() for col in star_2_columns]
 
-    # Plotting the stacked bar chart
     days = list(dr)
-    print(days)
-    fig, ax = plt.subplots(figsize=(10, 4))
-    bars1 = ax.bar(days, star_1_counts, label="Star 1", color="green")
-    bars2 = ax.bar(
-        days, star_2_counts, bottom=star_1_counts, label="Star 2", color="teal"
+
+    # Creating a Plotly figure for the stacked bar chart
+    fig = sp.make_subplots()
+
+    # Adding the first set of bars (Star 1)
+    fig.add_trace(go.Bar(x=days, y=star_1_counts, name="Star 1", marker_color="green"))
+
+    # Adding the second set of bars (Star 2)
+    fig.add_trace(
+        go.Bar(
+            x=days,
+            y=star_2_counts,
+            name="Star 2",
+            marker_color="teal",
+            base=star_1_counts,
+        )
     )
 
-    # Annotating each bar with the respective count
-    for bar in bars1:
-        yval = bar.get_height()
-        ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            yval - 5,
-            str(int(yval)),
-            ha="center",
-            va="bottom",
-            color="white",
-        )
+    # Updating layout
+    fig.update_layout(
+        title="Number of stars won per day",
+        xaxis=dict(title="Day", tickmode="array", tickvals=days),
+        yaxis=dict(title="Total stars won"),
+        legend=dict(x=0, y=1.0),
+        barmode="stack",
+    )
 
-    for bar in bars2:
-        yval = bar.get_height()
-        ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            yval + bar.get_y() - 5,
-            str(int(yval)),
-            ha="center",
-            va="bottom",
-            color="white",
+    # Adding annotations
+    for i, (count1, count2) in enumerate(zip(star_1_counts, star_2_counts)):
+        fig.add_annotation(
+            x=days[i],
+            y=count1 / 2,
+            text=str(count1),
+            showarrow=False,
+            font=dict(color="white"),
         )
-
-    ax.set_xlabel("Day")
-    ax.set_ylabel("Total stars won")
-    ax.set_title("Number of stars won per day")
-    ax.set_xticks(days)
-    ax.set_xticklabels(days)  # Ensure x-axis labels are always displayed
-    ax.tick_params(axis="both", colors="white")
-    ax.legend(loc="upper left")
+        fig.add_annotation(
+            x=days[i],
+            y=count1 + count2 / 2,
+            text=str(count2),
+            showarrow=False,
+            font=dict(color="white"),
+        )
 
     return fig
 
 
-def daily_stars_progression(df: DataFrame, dr: range) -> Figure:
-    # Create a dictionary to store cumulative counts for each day over the time intervals
+def daily_stars_progression(df: DataFrame, dr: range):
     cumulative_counts = {f"Day {i}": [] for i in dr}
 
     # Calculate the cumulative counts for each day
@@ -134,38 +146,42 @@ def daily_stars_progression(df: DataFrame, dr: range) -> Figure:
         for j in range(len(_TIME_SECONDS))
     ]
 
-    # Plotting the progression of stars per day with the legend on the right side of the graph
-    fig, ax = plt.subplots(figsize=(14, 7))
+    # Creating a Plotly figure
+    fig = sp.make_subplots()
 
-    # Plotting the lines for each day
+    # Adding traces for each day
     for day, counts in cumulative_counts.items():
-        ax.plot(_TIME_INTERVALS, counts, label=day)
+        fig.add_trace(go.Scatter(x=_TIME_INTERVALS, y=counts, mode="lines", name=day))
 
-    # Plotting the average progression
-    ax.plot(
-        _TIME_INTERVALS,
-        average_progression,
-        label="Average",
-        color="white",
-        linestyle="--",
+    # Adding trace for the average progression
+    fig.add_trace(
+        go.Scatter(
+            x=_TIME_INTERVALS,
+            y=average_progression,
+            mode="lines",
+            name="Average",
+            line=dict(color="white", dash="dash"),
+        )
     )
 
-    # Setting the title and labels
-    ax.set_title("Total progression of stars per day", color="white")
-    ax.set_xlabel("Time since problem open", color="white")
-    ax.set_ylabel("Number of stars", color="white")
-    ax.tick_params(axis="both", colors="white")
-    ax.legend(
-        loc="center left", bbox_to_anchor=(1, 0.5)
-    )  # Positioning the legend on the right side
-    plt.grid(True, which="both", ls="--", c="0.5")
+    # Updating the layout of the plot
+    fig.update_layout(
+        title="Total progression of stars per day",
+        xaxis_title="Time since problem open",
+        yaxis_title="Number of stars",
+        legend=dict(x=1.05, y=0.5, xanchor="left", yanchor="middle"),
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
 
-    # Displaying the plot
-    plt.tight_layout()
+    # Setting colors for x-axis, y-axis, and title
+    fig.update_xaxes(tickcolor="white", title_font=dict(color="white"))
+    fig.update_yaxes(tickcolor="white", title_font=dict(color="white"))
+    fig.update_layout(title_font=dict(color="white"))
+
     return fig
 
 
-def get_member_analysis_pt1(members: List[str], df: DataFrame, dr: range) -> Figure:
+def get_member_analysis_part1(members: List[str], df: DataFrame, dr: range):
     days_list = list(dr)
 
     # Calculate "time to solve" for each user for each day
@@ -184,32 +200,33 @@ def get_member_analysis_pt1(members: List[str], df: DataFrame, dr: range) -> Fig
             ]
             time_to_solve[user] = times
 
-    # Plotting the "time to solve" for each selected user
-    fig, ax = plt.subplots(figsize=(14, 5))
+    # Creating a Plotly figure
+    fig = sp.make_subplots()
+
+    # Adding traces for each user
     for user, times in time_to_solve.items():
-        ax.plot(days_list, times, label=user)
+        fig.add_trace(go.Scatter(x=days_list, y=times, mode="lines", name=user))
 
-    # Setting the title, labels, and other plot properties
-    ax.set_title("Time to solve part 1 from problem open", color="white")
-    ax.set_xlabel("Day", color="white")
-    ax.set_ylabel("Time to solve", color="white")
-    ax.set_yscale("log")
-    ax.set_yticks(_TIME_SECONDS)
-    ax.set_yticklabels(_TIME_INTERVALS)
-    ax.set_xticks(days_list)
-    ax.tick_params(axis="both", colors="white")
-    ax.legend(
-        loc="center left", bbox_to_anchor=(1, 0.5)
-    )  # Positioning the legend on the right side
-    plt.grid(True, which="both", ls="--", c="0.5")
+    # Updating the layout of the plot
+    fig.update_layout(
+        title="Time to solve part 1 from problem open",
+        xaxis_title="Day",
+        yaxis_title="Time to solve",
+        yaxis_type="log",
+        yaxis=dict(tickvals=_TIME_SECONDS, ticktext=_TIME_INTERVALS),
+        legend=dict(x=1.05, y=0.5, xanchor="left", yanchor="middle"),
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
 
-    # Displaying the plot
-    plt.tight_layout()
+    # Setting colors for x-axis, y-axis, and title
+    fig.update_xaxes(tickcolor="white", title_font=dict(color="white"))
+    fig.update_yaxes(tickcolor="white", title_font=dict(color="white"))
+    fig.update_layout(title_font=dict(color="white"))
+
     return fig
 
 
-def get_member_analysis_pt2(members: List[str], df: DataFrame, dr: range) -> Figure:
-    # Calculate "time to solve part 2 after solving part 1" for each user for each day
+def get_member_analysis_pt2(members: List[str], df: DataFrame, dr: range):
     days_list = list(dr)
     time_to_solve_part2 = {}
     for user in members:
@@ -227,35 +244,39 @@ def get_member_analysis_pt2(members: List[str], df: DataFrame, dr: range) -> Fig
             ]
             time_to_solve_part2[user] = times
 
-    # Plotting the "time to solve part 2 after solving part 1" for each selected user
-    fig, ax = plt.subplots(figsize=(14, 5))
-    for user, times in time_to_solve_part2.items():
-        ax.plot(days_list, times, label=user)
+    # Creating a Plotly figure
+    fig = sp.make_subplots()
 
-    # Setting the title, labels, and other plot properties
-    ax.set_title("Time to solve part 2 after solving part 1", color="white")
-    ax.set_xlabel("Day", color="white")
-    ax.set_ylabel("Time to solve (s)", color="white")
-    ax.set_yscale("log")
-    # Setting custom y-ticks to match the given image
+    # Adding traces for each user
+    for user, times in time_to_solve_part2.items():
+        # Converting seconds to minutes for the y-values
+        times_in_minutes = [time / 60 if time is not None else None for time in times]
+        fig.add_trace(
+            go.Scatter(x=days_list, y=times_in_minutes, mode="lines", name=user)
+        )
+
+    # Setting custom y-ticks and labels
     custom_y_ticks = [
-        15,
-        30,
-        1 * 60,
-        2 * 60,
-        5 * 60,
-        10 * 60,
-        30 * 60,
-        1 * 60 * 60,
-        2 * 60 * 60,
-        4 * 60 * 60,
-        8 * 60 * 60,
-        1 * 24 * 60 * 60,
-        4 * 24 * 60 * 60,
+        t / 60
+        for t in [
+            15,
+            30,
+            1 * 60,
+            2 * 60,
+            5 * 60,
+            10 * 60,
+            30 * 60,
+            1 * 60 * 60,
+            2 * 60 * 60,
+            4 * 60 * 60,
+            8 * 60 * 60,
+            1 * 24 * 60 * 60,
+            4 * 24 * 60 * 60,
+        ]
     ]
     custom_y_labels = [
-        "15s",
-        "30s",
+        "0.25m",
+        "0.5m",
         "1m",
         "2m",
         "5m",
@@ -268,15 +289,21 @@ def get_member_analysis_pt2(members: List[str], df: DataFrame, dr: range) -> Fig
         "1d",
         "4d",
     ]
-    ax.set_yticks(custom_y_ticks)
-    ax.set_yticklabels(custom_y_labels)
-    ax.set_xticks(days_list)
-    ax.tick_params(axis="both", colors="white")
-    ax.legend(
-        loc="center left", bbox_to_anchor=(1, 0.5)
-    )  # Positioning the legend on the right side
-    plt.grid(True, which="both", ls="--", c="0.5")
 
-    # Displaying the plot
-    plt.tight_layout()
+    # Updating the layout of the plot
+    fig.update_layout(
+        title="Time to solve part 2 after solving part 1 (in minutes)",
+        xaxis_title="Day",
+        yaxis_title="Time to solve (minutes)",
+        yaxis_type="log",
+        yaxis=dict(tickvals=custom_y_ticks, ticktext=custom_y_labels),
+        legend=dict(x=1.05, y=0.5, xanchor="left", yanchor="middle"),
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
+
+    # Setting colors for x-axis, y-axis, and title
+    fig.update_xaxes(tickcolor="white", title_font=dict(color="white"))
+    fig.update_yaxes(tickcolor="white", title_font=dict(color="white"))
+    fig.update_layout(title_font=dict(color="white"))
+
     return fig
