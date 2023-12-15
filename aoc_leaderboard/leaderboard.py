@@ -32,6 +32,7 @@ class Member(BaseModel):
     @property
     def datarow(self):
         d = self.model_dump()
+        d["name"] = d["name"] or d["id"]
         del d["completion_day_level"]
         for i in range(1, 26):
             p = f"day_{i}"
