@@ -1,5 +1,5 @@
 import json
-from typing import Dict
+from typing import Dict, Optional
 from pydantic import BaseModel
 
 
@@ -10,7 +10,7 @@ class StarChallenge(BaseModel):
 
 class Member(BaseModel):
     id: int
-    name: str
+    name: Optional[str]
     stars: int
     global_score: int
     local_score: int
